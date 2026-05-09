@@ -18,12 +18,24 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Listen for drawing data
-  socket.on("draw", (data) => {
-  console.log("Drawing data received");
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
 
-  socket.broadcast.emit("draw", data);
-});
+    console.log(`${socket.id} joined room ${roomId}`);
+  });
+
+  socket.on("draw", (data) => {
+    socket.to(data.roomId).emit("draw", data);
+  });
+
+  socket.on("clear-canvas", (roomId) => {
+    socket.to(roomId).emit("clear-canvas");
+  });
+
+  // Chat event
+  socket.on("send-message", (data) => {
+    socket.to(data.roomId).emit("receive-message", data);
+  });
 
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
